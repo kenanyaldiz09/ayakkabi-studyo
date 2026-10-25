@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ayakkabı Stüdyo</title>
+  <style>
+    :root { color-scheme: light; --ink:#17202a; --muted:#667085; --line:#e3e7ed; --accent:#253d7a; --bg:#f5f7fb; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif; }
+    main { width:min(920px, calc(100% - 28px)); margin:36px auto; }
+    header { margin-bottom:22px; }
+    .eyebrow { text-transform:uppercase; letter-spacing:.12em; font-size:12px; font-weight:700; color:var(--accent); }
+    h1 { margin:8px 0; font-size:clamp(28px,4vw,40px); letter-spacing:-.04em; }
+    p { color:var(--muted); line-height:1.55; }
+    .panel { background:white; border:1px solid var(--line); border-radius:20px; padding:22px; box-shadow:0 10px 30px #16233d08; margin-bottom:16px; }
+    .drop { border:2px dashed #c9d1e0; border-radius:16px; padding:28px 18px; text-align:center; background:#fafbfe; }
+    .drop strong { display:block; font-size:17px; margin:8px 0; }
+    input[type=file] { display:block; width:100%; margin-top:14px; }
+    .styles { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .style-option { border:1px solid var(--line); border-radius:15px; padding:16px; cursor:pointer; display:block; }
+    .style-option:has(input:checked) { border:2px solid var(--accent); background:#f5f7ff; padding:15px; }
+    .style-option input { margin-right:8px; }
+    .sample { height:86px; border-radius:10px; margin:12px 0; display:flex; align-items:center; justify-content:center; font-size:32px; }
+    .white { background:linear-gradient(#fff,#f1f3f6); }
+    .premium { background:radial-gradient(ellipse at 50% 75%,#d9dce3 0%,#b6bbc5 34%,#7b8495 100%); color:#fff; }
+    button { border:0; background:var(--accent); color:#fff; font-weight:700; font-size:16px; padding:14px 18px; border-radius:12px; cursor:pointer; width:100%; margin-top:18px; }
+    button:disabled { opacity:.55; cursor:wait; }
+    .small { font-size:13px; }
+    #status { margin-top:14px; white-space:pre-wrap; }
+    .notice { background:#fff8e7; border:1px solid #f0dfb1; border-radius:12px; padding:12px 14px; font-size:13px; color:#6e5315; line-height:1.5; }
+    @media(max-width:620px) { .styles { grid-template-columns:1fr; } main { margin:20px auto; } .panel { padding:16px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Ürün fotoğrafı düzenleme</div>
+    <h1>Ayakkabı Stüdyo</h1>
+    <p>Fotoğraflarını topluca ekle, görünümünü seç ve düzenlenmiş görselleri ZIP dosyası olarak indir.</p>
+  </header>
+  <section class="panel">
+    <form id="form">
+      <div class="drop">
+        <div style="font-size:34px">↑</div>
+        <strong>Ayakkabı fotoğraflarını seç</strong>
+        <span class="small">JPG, PNG, WEBP veya AVIF · En fazla 250 fotoğraf</span>
+        <input id="photos" type="file" name="photos" accept=".jpg,.jpeg,.png,.webp,.avif" multiple required>
+        <p id="count" class="small">Henüz fotoğraf seçilmedi.</p>
+      </div>
+      <h2>Stüdyo tarzını seç</h2>
+      <div class="styles">
+        <label class="style-option">
+          <input type="radio" name="style" value="classic" checked>
+          <strong>Klasik stüdyo</strong>
+          <div class="sample white">👟</div>
+          <span class="small">Beyaz fon, yumuşak ışık ve doğal gölge. Ürün kataloğu için sade görünüm.</span>
+        </label>
+        <label class="style-option">
+          <input type="radio" name="style" value="premium">
+          <strong>Premium stüdyo</strong>
+          <div class="sample premium">👟</div>
+          <span class="small">Gri tonlu, daha gösterişli ve yapay zekâ ile oluşturulan stüdyo arka planı.</span>
+        </label>
+      </div>
+      <button id="submit" type="submit">Fotoğrafları düzenle</button>
+      <div id="status" role="status"></div>
+    </form>
+  </section>
+  <div class="notice">
+    <strong>Önemli:</strong> Bu başlangıç sürümü Photoroom API anahtarı sunucuya eklenince çalışır. API anahtarını bu sayfaya yazma veya başkalarıyla paylaşma. İlk olarak az sayıda fotoğrafla test et; özellikle premium stilde ürün ayrıntılarını kontrol et.
+  </div>
+  <p class="small">Bu uygulama Photoroom tarafından resmî olarak sunulan bir ürün değildir; Photoroom API'sine bağlanan örnek bir arayüzdür.</p>
+</main>
+<script>
+const input = document.getElementById('photos');
+const count = document.getElementById('count');
+const form = document.getElementById('form');
+const button = document.getElementById('submit');
+const status = document.getElementById('status');
+input.addEventListener('change', () => {
+  const n = input.files.length;
+  count.textContent = n ? `${n} fotoğraf seçildi.` : 'Henüz fotoğraf seçilmedi.';
+  if (n > 250) count.textContent = `${n} fotoğraf seçildi. En fazla 250 fotoğraf seçebilirsin.`;
+});
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!input.files.length) return;
+  if (input.files.length > 250) {
+    status.textContent = 'En fazla 250 fotoğraf seçebilirsin.';
+    return;
+  }
+  button.disabled = true;
+  button.textContent = 'Düzenleniyor…';
+  status.textContent = 'Fotoğraflar gönderiliyor. Çok sayıda fotoğrafın işlenmesi biraz sürebilir; sekmeyi kapatma.';
+  try {
+    const data = new FormData(form);
+    const response = await fetch('/process', { method:'POST', body:data });
+    if (!response.ok) {
+      let message = 'İşlem tamamlanamadı.';
+      try { const err = await response.json(); message = [err.error, ...(err.details || [])].filter(Boolean).join('\n'); } catch {}
+      throw new Error(message);
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ayakkabi_studyo_sonuclari.zip';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    status.textContent = `Tamamlandı. İşlenen fotoğraf: ${response.headers.get('X-Processed-Images') || '—'}. Başarısız: ${response.headers.get('X-Failed-Images') || '0'}.`;
+  } catch (err) {
+    status.textContent = err.message || 'Bir hata oluştu.';
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Fotoğrafları düzenle';
+  }
+});
+</script>
+</body>
+</html>
